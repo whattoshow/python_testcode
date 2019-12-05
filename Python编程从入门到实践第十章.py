@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-with open('G:\Programing\python_testcode\pi_digits.txt') as file_object:
+filename='G:\Programing\python_testcode\pi_digits.txt'
+with open(filename) as file_object:
     contents = file_object.read()
-    print(contents.rstrip())
-
+    for line in contents:
+        print(line)
+        '''print(contents.rstrip())'''
+        
+with open(filename) as file_object:
+    contents = file_object
+    for line in contents:
+        print(line)
 
 
 
