@@ -29,3 +29,28 @@ print(b.grad_fn)
 out.backward()
 ###打印梯度d(out)/dx
 print(x.grad)
+
+###接下来我们可以看一个向量-雅克比成绩的实例
+x = torch.randn(3, requires_grad=True)
+y = x * 2
+while y.data.norm() < 1000:
+    y = y * 2
+print(y)
+###在这个例子里，y不再是标量，.torch.autograd 不会直接计算全部的雅克比矩阵，但是如果我们想
+###要得到向量-雅克比乘积，只需要传递backward参数给向量。
+v = torch.tensor([0.1, 1.0, 0.00001], dtype=torch.float)
+y.backward(v)
+print(x.grad)
+
+###同样我们也可以停止追踪tensor的历史，
+####利用.requires_grad=True，通过将这一代码块包裹在with torch.no_grad()中
+print(x.requires_grad)
+print((x ** 2).requires_grad)
+with torch.no_grad():
+    print((x**2).requires_grad)
+    
+###也可以通过使用.detach()来获取一个新的tensor，该tensor具有相同的内容但是却没有要求梯度。
+print(x.requires_grad)
+y = x.detach()###y就是新的tensor
+print(y.requires_grad)
+print(x.eq(y).all())
