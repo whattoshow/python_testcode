@@ -20,6 +20,7 @@ Created on Sat Jan 11 16:47:23 2020
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -57,3 +58,53 @@ net = Net()
 print(net)
 
 ###到此为止，我们已经定义好了前向传播函数，反向传播功能在你使用autograd的时候被自动定义了。你可以使用任意的tensor操作在前向传播函数中。
+###模型的可学习参数可以通过net.parameters()返回
+params = list(net.parameters())
+print(len(params))
+print(params[0].size())
+
+###尝试一个随机的32*32的输入。记住：除了LeNet的输入尺寸为32x32，为了使用这个网络在MNIST数据集上，请将图像转换成32X32这一尺寸。
+input = torch.randn(1, 1, 32, 32)
+out = net(input)
+print(out)
+
+###注意torch.nn只支持mini-baches，整个torch.nn包只支持样本的mini-batch输入，而不是一个单一的样本。
+###例如，nn.Conve2d带着4维的张量，包含nSamples * nChannels * Height * Width.
+###如果你有一个单一的例子，用input.qunsqueeze(0)就可以添加一个假的batch维度。
+###torch.Tensor 是一个多维数组，它支持自动梯度计算，例如backward()。另外也包括梯度w.r.t张量。
+###nn.Module是一个神经网络模块。一个简便的封装参数的方式，可方便的将参数移动到GPU，导出、加载中。
+###nn.Parameter 是一种张量，当作为一个模块的属性时，它将被自动的注册。
+### autograd.Function 它实现自动梯度计算的前馈和反向传播的定义。每个Tensor操作至少创造一个Function节点，这个节点链接功能并创造一个Tensor以及将这个张量的历史做编码。
+
+###损失函数
+###损失函数将（输出结果，目标）对作为输入，计算输出结果和目标之间的差距是多少
+###在nn包里有几种损失函数。一个简单的损失函数即：nn.MSELoss，这个函数计算输入和目标之间的均方差误差
+
+###例如：
+output = net(input)
+target = torch.randn(10) #这个是个假目标例子
+target = target.view(1, -1) #使这个假目标和输出的形状一样
+criterion = nn.MSELoss()
+loss = criterion(output, target)
+print(loss)
+
+###现在，如果你在反向传播方向依照loss这个结果，使用loss的.grad_fn属性，你会看见一个计算图，如下所示：
+###input->conv2d->relu->maxpool2d->relu->maxpool2d
+###     ->view->linear->relu->linear->relu->linear
+###     ->MSELoss
+###     ->loss
+
+###为了描述的更清楚，我们可以看一些反向传播的步骤
+print(loss.grad_fn) #MSELoss
+
+
+###在使用神经网络时，为了使用使用不同的更新规则，我们可以用torch.optim来实现，
+#创建自己的优化器
+optimizer = optim.SGD(net.parameters(), lr=0.01)
+
+#训练过程中用优化器对损失函数的反向传播优化:
+optimizer.zero_grad()   # zero the gradient buffers
+output = net(input)
+loss = criterion(output, target)
+loss.backward()
+optimizer.step()    # Does the update
