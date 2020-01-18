@@ -176,9 +176,7 @@ net.to(device)
 #另外，需要将每一步的输入和输出目标也都发送到GPU中：
 inputs, labels = data[0].to(device), data[1].to(device)    
 
-    
-    
-    
+
     
     
     
